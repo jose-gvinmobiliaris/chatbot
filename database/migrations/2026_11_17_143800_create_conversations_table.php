@@ -6,20 +6,31 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('conversations', function (Blueprint $table) {
             $table->id();
+
+            $table->foreignId('lead_id')
+                ->nullable()
+                ->constrained('leads')
+                ->nullOnDelete();
+
+            $table->string('session_token', 64)->unique();
+
+            $table->string('status', 20)->default('active');
+
+            $table->string('flow_state')->nullable();
+
+            $table->timestamp('last_interaction_at')->nullable();
+            $table->timestamp('closed_at')->nullable();
+
             $table->timestamps();
+
+            $table->index(['status', 'last_interaction_at']);
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('conversations');
