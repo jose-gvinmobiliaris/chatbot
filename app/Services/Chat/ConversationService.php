@@ -44,7 +44,12 @@ class ConversationService
             return null;
         }
 
-        return $conversation->load('messages', 'lead', 'projects');
+        return Conversation::with([
+            'messages',
+            'lead'
+        ])
+            ->where('session_token', $token)
+            ->first();
     }
 
     public function updateInteraction(Conversation $conversation): Conversation

@@ -1,3 +1,4 @@
+
 <?php
 
 use Illuminate\Database\Migrations\Migration;
@@ -12,19 +13,18 @@ return new class extends Migration
             $table->id();
 
             $table->foreignId('conversation_id')
-                ->constrained('conversations')
+                ->constrained()
                 ->cascadeOnDelete();
 
-            $table->foreignId('project_id')
-                ->constrained('projects')
-                ->cascadeOnDelete();
+            // ID original del CPT proyecto de WordPress.
+            $table->unsignedBigInteger('wordpress_project_id');
 
             $table->timestamps();
 
-            $table->unique([
-                'conversation_id',
-                'project_id'
-            ]);
+            $table->unique(
+                ['conversation_id', 'wordpress_project_id'],
+                'conversation_wordpress_project_unique'
+            );
         });
     }
 

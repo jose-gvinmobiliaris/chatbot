@@ -16,11 +16,13 @@ class Conversation extends Model
         'flow_state',
         'last_interaction_at',
         'closed_at',
+        'flow_data',
     ];
 
     protected function casts(): array
     {
         return [
+            'flow_data' => 'array',
             'last_interaction_at' => 'datetime',
             'closed_at' => 'datetime',
         ];
@@ -34,13 +36,5 @@ class Conversation extends Model
     public function messages(): HasMany
     {
         return $this->hasMany(Message::class);
-    }
-
-    public function projects(): BelongsToMany
-    {
-        return $this->belongsToMany(
-            Project::class,
-            'conversation_project'
-        )->withTimestamps();
     }
 }
