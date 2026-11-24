@@ -6,6 +6,7 @@ use App\Models\Conversation;
 use App\Models\Lead;
 use Illuminate\Support\Facades\DB;
 use App\Services\WordPress\WordPressProjectService;
+use InvalidArgumentException;
 
 class ChatService
 {
@@ -69,6 +70,40 @@ class ChatService
 
             return $lead;
         });
+    }
+
+    public function captureContactDetails(
+        Conversation $conversation,
+        string $phone,
+        string $email
+    ): array {
+
+        if ($conversation->flow_state !== 'capture_phone') {
+            throw new InvalidArgumentException(
+                'La conversación no está esperando datos de contacto.'
+            );
+        }
+
+        $data = $conversation->flow_data ?? [];
+
+        // Registrar el lead y vincularlo con la conversación.
+        $this->registerLead($conversation, [
+            'name' => $data['lead_name'] ?? null,
+            'phone' => $phone,
+            'email' => strtolower(trim($email)),
+        ]);
+
+        // Guardar los datos capturados en la conversación.
+        $data['lead_phone'] = $phone;
+        $data['lead_email'] = strtolower(trim($email));
+
+        $conversation->flow_data = $data;
+
+        return $this->reply(
+            $conversation,
+            '¡Muchas gracias! Hemos registrado tus datos y tu interés. Un asesor de GV Inmobiliaria se comunicará contigo pronto.',
+            'completed'
+        );
     }
 
     public function sendMessage(
@@ -254,27 +289,10 @@ class ChatService
                 );
 
             case 'capture_phone':
-                $phone = preg_replace('/\D+/', '', $content);
-
-                if (strlen($phone) < 9 || strlen($phone) > 15) {
-                    return $this->reply(
-                        $conversation,
-                        'El número no parece válido. Por favor, ingresa un teléfono de 9 a 15 dígitos.'
-                    );
-                }
-
-                $this->registerLead($conversation, [
-                    'name' => $data['lead_name'] ?? null,
-                    'phone' => $phone,
-                ]);
-
-                $conversation->flow_state = 'completed';
-                $conversation->flow_data = $data;
-                $conversation->save();
 
                 return $this->reply(
                     $conversation,
-                    '¡Muchas gracias! Hemos registrado tus datos y tu interés. Un asesor de GV Inmobiliaria se comunicará contigo pronto.'
+                    'Para completar tu registro, utiliza el formulario e ingresa tu número de celular y correo electrónico.'
                 );
 
             case 'completed':

@@ -91,52 +91,100 @@ class ChatController extends Controller
     }
 
     public function selectProject(Request $request): JsonResponse
-{
-    $validated = $request->validate([
-        'token' => ['required', 'string', 'size:64'],
-        'wordpress_project_id' => ['required', 'integer', 'min:1'],
-    ]);
+    {
+        $validated = $request->validate([
+            'token' => ['required', 'string', 'size:64'],
+            'wordpress_project_id' => ['required', 'integer', 'min:1'],
+        ]);
 
-    $conversation = $this->getActiveConversation(
-        $validated['token']
-    );
+        $conversation = $this->getActiveConversation(
+            $validated['token']
+        );
 
-    if (!$conversation) {
-        return response()->json([
-            'success' => false,
-            'message' => 'La conversación no existe o ha expirado.',
-        ], 404);
+        if (!$conversation) {
+            return response()->json([
+                'success' => false,
+                'message' => 'La conversación no existe o ha expirado.',
+            ], 404);
+        }
+
+        try {
+            $result = $this->chatService->selectProject(
+                $conversation,
+                (int) $validated['wordpress_project_id']
+            );
+
+            return response()->json(
+                $result,
+                $result['success'] ? 200 : 422
+            );
+        } catch (\Throwable $e) {
+
+            \Illuminate\Support\Facades\Log::error(
+                'Error registrando interés en proyecto',
+                [
+                    'conversation_id' => $conversation->id,
+                    'project_id' => $validated['wordpress_project_id'],
+                    'message' => $e->getMessage(),
+                ]
+            );
+
+            return response()->json([
+                'success' => false,
+                'message' => 'No se pudo registrar el interés en el proyecto.',
+            ], 500);
+        }
     }
 
-    try {
-        $result = $this->chatService->selectProject(
-            $conversation,
-            (int) $validated['wordpress_project_id']
+    public function captureContactDetails(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'token' => ['required', 'string', 'size:64'],
+            'phone' => ['required', 'string', 'min:9', 'max:20'],
+            'email' => ['required', 'email:rfc', 'max:255'],
+        ]);
+
+        $conversation = $this->getActiveConversation(
+            $validated['token']
         );
 
-        return response()->json(
-            $result,
-            $result['success'] ? 200 : 422
-        );
+        if (!$conversation) {
+            return response()->json([
+                'success' => false,
+                'message' => 'La conversación no existe o ha expirado.',
+            ], 404);
+        }
 
-    } catch (\Throwable $e) {
+        try {
+            $result = $this->chatService->captureContactDetails(
+                $conversation,
+                trim($validated['phone']),
+                strtolower(trim($validated['email']))
+            );
 
-        \Illuminate\Support\Facades\Log::error(
-            'Error registrando interés en proyecto',
-            [
-                'conversation_id' => $conversation->id,
-                'project_id' => $validated['wordpress_project_id'],
+            return response()->json($result);
+        } catch (\InvalidArgumentException $e) {
+
+            return response()->json([
+                'success' => false,
                 'message' => $e->getMessage(),
-            ]
-        );
+            ], 422);
+        } catch (\Throwable $e) {
 
-        return response()->json([
-            'success' => false,
-            'message' => 'No se pudo registrar el interés en el proyecto.',
-        ], 500);
+            \Illuminate\Support\Facades\Log::error(
+                'Error registrando datos de contacto',
+                [
+                    'conversation_id' => $conversation->id,
+                    'message' => $e->getMessage(),
+                ]
+            );
+
+            return response()->json([
+                'success' => false,
+                'message' => 'No se pudieron registrar tus datos.',
+            ], 500);
+        }
     }
-}
-
 
     public function close(Request $request): JsonResponse
     {

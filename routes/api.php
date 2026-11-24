@@ -30,4 +30,6 @@ Route::prefix('chat')->group(function () {
     Route::post('/project-interest', [ProjectInterestController::class, 'store']);
 
     Route::post('/select-project', [ChatController::class, 'selectProject']);
+
+    Route::post('/contact-details', [ChatController::class, 'captureContactDetails']);
 });

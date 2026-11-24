@@ -60,7 +60,7 @@ class LeadService
 
     public function updateLeadType(Lead $lead): Lead
     {
-        $lead->lead_type = ($lead->name && $lead->phone)
+        $lead->lead_type = ($lead->name && $lead->phone && $lead->email)
             ? 'potential'
             : 'curious';
 
