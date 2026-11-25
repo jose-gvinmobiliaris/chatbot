@@ -7,7 +7,6 @@ use App\Models\Lead;
 use Illuminate\Support\Facades\DB;
 use App\Services\WordPress\WordPressProjectService;
 use InvalidArgumentException;
-use Illuminate\Support\Facades\Log;
 
 class ChatService
 {
@@ -20,11 +19,6 @@ class ChatService
 
     public function start(?string $token = null): array
     {
-        Log::info('PRUEBA DEPLOY GV: El método start() de Laravel se está ejecutando correctamente.', [
-        'environment' => app()->environment(),
-        'timestamp' => now()->toDateTimeString(),
-    ]);
-    
         if ($token) {
             $conversation = $this->conversationService
                 ->recoverConversation($token);
