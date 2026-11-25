@@ -46,7 +46,7 @@ class ChatService
         $this->messageService->createMessage(
             $conversation,
             'bot',
-            "¡Hola! 👋 Bienvenido a GV Inmobiliaria.\n\n¿En qué podemos ayudarte?\n\n1. Buscar proyectos\n2. Preguntas frecuentes\n3. Hablar con un asesor"
+            "¡Hola! Bienvenido al asistente virtual de GV Inmobiliaria.\n\n¿En qué podemos ayudarte?\n\n1. Buscar proyectos\n2. Preguntas frecuentes\n3. Hablar con un asesor"
         );
 
         return [
